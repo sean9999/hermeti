@@ -9,6 +9,6 @@ type CLI struct {
 	Cmd Command
 }
 
-func (cli CLI) Run(ctx context.Context, args []string) []string {
+func (cli CLI) Run(ctx context.Context, args []string) ([]string, error) {
 	return cli.Cmd(ctx, cli.Env, args)
 }

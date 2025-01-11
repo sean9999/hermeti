@@ -28,7 +28,7 @@ func (g *globalState) parse(args []string) []string {
 	return fset.Args()
 }
 
-func (g *globalState) Run(ctx context.Context, env hermeti.Env, args []string) []string {
+func (g *globalState) Run(ctx context.Context, env hermeti.Env, args []string) ([]string, error) {
 	remainders := g.parse(args)
 
 	if g.DieNow {
@@ -42,14 +42,14 @@ func (g *globalState) Run(ctx context.Context, env hermeti.Env, args []string) [
 	return hello(ctx, env, remainders)
 }
 
-func hello(ctx context.Context, env hermeti.Env, args []string) []string {
+func hello(ctx context.Context, env hermeti.Env, args []string) ([]string, error) {
 	gs, ok := ctx.Value("globalState").(*globalState)
 	if !ok {
-		panic("no global state")
+		return args, pear.New("no global state")
 	}
 	fmt.Fprintf(env.OutStream, "the remainig args are:\t%s%v%s\n", Blue, args, Reset)
 	fmt.Fprintf(env.OutStream, "verbosity still is:\t%s%v%s\n", Blue, gs.Verbosity, Reset)
-	return args
+	return args, nil
 }
 
 func info(ctx context.Context, env hermeti.Env, args []string) []string {
@@ -71,7 +71,11 @@ func main() {
 	s := new(globalState)
 
 	cli := &hermeti.CLI{Env: env, Cmd: s.Run}
-	remainders := cli.Run(ctx, os.Args[1:])
+	remainders, err := cli.Run(ctx, os.Args[1:])
+
+	if err != nil {
+		panic(err)
+	}
 
 	if len(remainders) > 0 {
 		subcommand := remainders[0]
