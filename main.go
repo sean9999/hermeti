@@ -7,10 +7,10 @@ package hermeti
 // 	}
 // }
 
-func NewRealCli(fn Command) CLI {
+func NewRealCli[T any](exe Runner[T]) CLI[T] {
 	env := RealEnv()
-	return CLI{
+	return CLI[T]{
 		Env: env,
-		Cmd: fn,
+		Cmd: exe,
 	}
 }

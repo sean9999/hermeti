@@ -3,8 +3,11 @@ package hermeti
 import (
 	"bytes"
 	"crypto/rand"
+	"errors"
 	"io"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/afero"
@@ -64,4 +67,31 @@ func TestEnv() Env {
 		Vars:       map[string]string{},
 	}
 	return env
+}
+
+// mount a subdirectory into an environment. Useful for testing. Probably dangerous otherwise
+func (env *Env) Mount(dirfs fs.ReadDirFS, at string) error {
+	if env.Filesystem == nil {
+		return errors.New("nil filesystem")
+	}
+	entries, err := dirfs.ReadDir(".")
+	if err != nil {
+		return err
+	}
+
+	for _, e := range entries {
+		if !e.IsDir() {
+			srcFile, err := dirfs.Open(e.Name())
+			if err != nil {
+				return err
+			}
+			destFile, err := env.Filesystem.Create(filepath.Join(at, e.Name()))
+			if err != nil {
+				return err
+			}
+			io.Copy(destFile, srcFile)
+			srcFile.Close()
+		}
+	}
+	return nil
 }
