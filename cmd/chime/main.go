@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -34,9 +33,9 @@ func (s *exe) State() *exe {
 
 func main() {
 
-	cli := hermeti.NewRealCli[*exe](new(exe))
+	cli := hermeti.NewRealCli(new(exe))
 	fmt.SetOutput(cli.Env.OutStream)
-	cli.Run(context.Background())
+	cli.Run()
 
 }
 

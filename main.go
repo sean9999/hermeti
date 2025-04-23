@@ -1,15 +1,16 @@
 package hermeti
 
-// func New(env Env, fn Command) CLI {
-// 	return CLI{
-// 		Env: env,
-// 		Cmd: fn,
-// 	}
-// }
-
-func NewRealCli[T any](exe Runner[T]) CLI[T] {
+func NewRealCli(exe Runner) CLI {
 	env := RealEnv()
-	return CLI[T]{
+	return CLI{
+		Env: env,
+		Cmd: exe,
+	}
+}
+
+func NewTestCli[T any](exe Runner) CLI {
+	env := TestEnv()
+	return CLI{
 		Env: env,
 		Cmd: exe,
 	}

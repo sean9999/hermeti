@@ -10,12 +10,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/sean9999/pear"
 	"github.com/spf13/afero"
 )
 
 // Env is a computing environment.
 type Env struct {
 	InStream   io.Reader
+	queue      []byte
 	OutStream  io.Writer
 	ErrStream  io.Writer
 	Filesystem afero.Fs
@@ -94,4 +96,29 @@ func (env *Env) Mount(dirfs fs.ReadDirFS, at string) error {
 		}
 	}
 	return nil
+}
+
+func (env *Env) PipeIn(r io.Reader) error {
+
+	if r == nil {
+		return pear.New("nil reader")
+	}
+
+	buf := new(bytes.Buffer)
+	if env.InStream != nil {
+		existingBytes, err := io.ReadAll(env.InStream)
+		if err != nil {
+			return err
+		}
+		buf.Write(existingBytes)
+	}
+	newBytes, err := io.ReadAll(r)
+	if err != nil {
+		return err
+	}
+
+	buf.Write(newBytes)
+	env.InStream = buf
+	return nil
+
 }

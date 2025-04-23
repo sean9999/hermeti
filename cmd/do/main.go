@@ -53,10 +53,9 @@ func main() {
 	}()
 
 	env := hermeti.RealEnv()
-	ctx := context.Background()
 	exe := new(globalState)
-	cli := &hermeti.CLI[*globalState]{Env: env, Cmd: exe}
-	cli.Run(ctx)
+	cli := &hermeti.CLI{Env: env, Cmd: exe}
+	cli.Run()
 
 }
 
@@ -84,7 +83,7 @@ func hello(ctx context.Context, env hermeti.Env, args []string) ([]string, error
 	return args, nil
 }
 
-func info(ctx context.Context, env hermeti.Env, args []string) []string {
-	fmt.Fprintln(env.OutStream, ctx, env, args)
-	return nil
-}
+// func info(ctx context.Context, env hermeti.Env, args []string) []string {
+// 	fmt.Fprintln(env.OutStream, ctx, env, args)
+// 	return nil
+// }

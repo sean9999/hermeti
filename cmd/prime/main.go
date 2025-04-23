@@ -120,6 +120,6 @@ func (exe *exe) State() *exe {
 }
 
 func main() {
-	cli := hermeti.NewRealCli[*exe](NewExe())
-	cli.Run(context.Background())
+	cli := hermeti.NewRealCli(NewExe())
+	cli.Run()
 }
