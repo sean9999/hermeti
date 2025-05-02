@@ -8,7 +8,7 @@ func NewRealCli(exe Runner) CLI {
 	}
 }
 
-func NewTestCli[T any](exe Runner) CLI {
+func NewTestCli(exe Runner) CLI {
 	env := TestEnv()
 	return CLI{
 		Env: env,
