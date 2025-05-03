@@ -1,6 +1,7 @@
 package hermeti
 
 import (
+	"bytes"
 	"io"
 
 	"github.com/sean9999/pear"
@@ -43,13 +44,20 @@ var ErrOutputNotReadable = pear.Defer("output stream is not readable")
 // OutStream returns an io.Reader representing the stuff you put in StdOut.
 //
 //	This will not work in a real CLI because os.StdOut is not readable
-func (cli CLI) OutStream() (io.Reader, error) {
+func (cli CLI) OutStream() (*bytes.Buffer, error) {
 
 	o, ok := cli.Env.OutStream.(io.Reader)
 	if !ok {
 		return nil, ErrOutputNotReadable
 	}
 
-	return o, nil
+	b, err := io.ReadAll(o)
+	if err != nil {
+		return nil, err
+	}
+
+	buff := bytes.NewBuffer(b)
+
+	return buff, nil
 
 }
