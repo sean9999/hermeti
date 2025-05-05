@@ -20,6 +20,7 @@ type exe struct {
 	n      int
 	w      time.Duration
 	sync.RWMutex
+	hermeti.PassthroughInit
 }
 
 func NewExe() *exe {

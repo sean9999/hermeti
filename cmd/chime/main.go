@@ -17,7 +17,9 @@ import (
  *	ex: fmt.SetOutput(cli.Env.OutStream)
  **/
 
-type exe struct{}
+type exe struct {
+	hermeti.PassthroughInit
+}
 
 func (s *exe) Run(env hermeti.Env) {
 	fmtRoot := fmt.Sprintf("%s/src/fmt", runtime.GOROOT())
