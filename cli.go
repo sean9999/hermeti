@@ -17,6 +17,7 @@ type Initializer interface {
 	Init(Env) error
 }
 
+// PassthroughInit is an Initializer that does nothing
 type PassthroughInit struct{}
 
 func (p PassthroughInit) Init(_ Env) error {
@@ -28,7 +29,7 @@ type InitRunner interface {
 	Initializer
 }
 
-// a CLI is a command line interface.
+// a CLI is a command line interface. It runs an app against an environment
 type CLI struct {
 	Env         Env
 	Cmd         InitRunner
@@ -44,11 +45,6 @@ func (cli CLI) Run() {
 	}
 	cli.Cmd.Run(cli.Env)
 }
-
-// Obj exposes our application object
-// func (cli CLI) Obj() T {
-// 	return cli.Cmd.(T)
-// }
 
 var ErrOutputNotReadable = pear.Defer("output stream is not readable")
 

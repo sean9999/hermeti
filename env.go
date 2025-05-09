@@ -99,6 +99,7 @@ func (env *Env) Mount(dirfs fs.ReadDirFS, at string) error {
 	return nil
 }
 
+// PipeIn pipes a stream into stdIn
 func (env *Env) PipeIn(r io.Reader) error {
 
 	if r == nil {
