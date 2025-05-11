@@ -68,3 +68,24 @@ func (cli CLI) OutStream() (*bytes.Buffer, error) {
 	return buff, nil
 
 }
+
+// ErrStream returns an io.Reader representing the stuff you put in StdErr.
+//
+//	This will not work in a real CLI because os.StdOut is not readable
+func (cli CLI) ErrStream() (*bytes.Buffer, error) {
+
+	o, ok := cli.Env.ErrStream.(io.Reader)
+	if !ok {
+		return nil, ErrOutputNotReadable
+	}
+
+	b, err := io.ReadAll(o)
+	if err != nil {
+		return nil, err
+	}
+
+	buff := bytes.NewBuffer(b)
+
+	return buff, nil
+
+}
