@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
@@ -98,6 +99,7 @@ func (env *Env) Mount(dirfs fs.ReadDirFS, at string) error {
 	return nil
 }
 
+// PipeIn pipes a stream into stdIn
 func (env *Env) PipeIn(r io.Reader) error {
 
 	if r == nil {
@@ -120,5 +122,15 @@ func (env *Env) PipeIn(r io.Reader) error {
 	buf.Write(newBytes)
 	env.InStream = buf
 	return nil
+
+}
+
+func (env *Env) PipeInFile(fpath string) error {
+
+	fd, err := env.Filesystem.Open(fpath)
+	if err != nil {
+		return fmt.Errorf("could not pipe in file. %w", err)
+	}
+	return env.PipeIn(fd)
 
 }

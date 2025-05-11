@@ -11,12 +11,13 @@ import (
 )
 
 // we want this struct to be globally available
-type globalState struct {
+type app struct {
 	Verbosity uint
 	DieNow    bool
+	hermeti.PassthroughInit
 }
 
-func (g *globalState) Run(env hermeti.Env) {
+func (g *app) Run(env hermeti.Env) {
 
 	//	we have no use for the first argument in [os.Args]
 	args := env.Args[1:]
@@ -39,7 +40,7 @@ func (g *globalState) Run(env hermeti.Env) {
 
 }
 
-func (exe *globalState) State() *globalState {
+func (exe *app) State() *app {
 	return exe
 }
 
@@ -53,13 +54,13 @@ func main() {
 	}()
 
 	env := hermeti.RealEnv()
-	exe := new(globalState)
+	exe := new(app)
 	cli := &hermeti.CLI{Env: env, Cmd: exe}
 	cli.Run()
 
 }
 
-func (g *globalState) parseArgs(args []string) []string {
+func (g *app) parseArgs(args []string) []string {
 	var dieNow bool
 	var verbosity uint
 	fset := flag.NewFlagSet("global", flag.ExitOnError)
@@ -73,7 +74,7 @@ func (g *globalState) parseArgs(args []string) []string {
 
 func hello(ctx context.Context, env hermeti.Env, args []string) ([]string, error) {
 
-	gs, ok := ctx.Value("globalState").(*globalState)
+	gs, ok := ctx.Value("globalState").(*app)
 	if !ok {
 		return args, pear.New("no global state")
 	}
