@@ -25,6 +25,7 @@ type Env struct {
 	Randomness io.Reader
 	Args       []string
 	Vars       map[string]string
+	Exit       func(int)
 }
 
 // take strings of the form "foo=bar" and return a map
@@ -55,6 +56,7 @@ func RealEnv() Env {
 		Randomness: rand.Reader,
 		Args:       os.Args,
 		Vars:       stringsToMap(os.Environ()),
+		Exit:       os.Exit,
 	}
 	return e
 }
@@ -68,6 +70,7 @@ func TestEnv() Env {
 		Filesystem: afero.NewMemMapFs(),
 		Args:       []string{},
 		Vars:       map[string]string{},
+		Exit:       func(_ int) {},
 	}
 	return env
 }
