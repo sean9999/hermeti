@@ -137,3 +137,19 @@ func (env *Env) PipeInFile(fpath string) error {
 	return env.PipeIn(fd)
 
 }
+
+func (env *Env) PipeInFiles(fpaths ...string) error {
+	var e error
+
+	for _, fpath := range fpaths {
+		err := env.PipeInFile(fpath)
+		if err != nil {
+			if e != nil {
+				e = fmt.Errorf("%w. %w", e, err)
+			} else {
+				e = err
+			}
+		}
+	}
+	return e
+}
