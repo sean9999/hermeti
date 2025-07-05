@@ -7,20 +7,22 @@ import (
 	"github.com/sean9999/pear"
 )
 
-// a Runner takes an [Env] and runs some code against it
+// a Runner takes an [Env] and runs some code against it.
+// It cannot modify the Env.
 type Runner interface {
 	Run(Env)
 }
 
-// an Initializer initializes itself in preparation of running
+// an Initializer initializes itself in preparation of running.
+// It can modify its [Env]
 type Initializer interface {
-	Init(Env) error
+	Init(*Env) error
 }
 
 // PassthroughInit is an Initializer that does nothing
 type PassthroughInit struct{}
 
-func (p PassthroughInit) Init(_ Env) error {
+func (p PassthroughInit) Init(_ *Env) error {
 	return nil
 }
 
@@ -40,7 +42,7 @@ type CLI struct {
 // It's simly a convenience function.
 func (cli CLI) Run() {
 	if !cli.initialized {
-		cli.Cmd.Init(cli.Env)
+		cli.Cmd.Init(&cli.Env)
 		cli.initialized = true
 	}
 	cli.Cmd.Run(cli.Env)
