@@ -7,13 +7,13 @@ import (
 	"github.com/sean9999/pear"
 )
 
-// a Runner takes an [Env] and runs some code against it.
+// A Runner takes an [Env] and runs some code against it.
 // It cannot modify the Env.
 type Runner interface {
 	Run(Env)
 }
 
-// an Initializer initializes itself in preparation of running.
+// An Initializer initializes itself in preparation of running.
 // It can modify its [Env]
 type Initializer interface {
 	Init(*Env) error
@@ -31,15 +31,15 @@ type InitRunner interface {
 	Initializer
 }
 
-// a CLI is a command line interface. It runs an app against an environment
+// A CLI is a command line interface. It runs an app against an environment
 type CLI struct {
 	Env         Env
 	Cmd         InitRunner
 	initialized bool
 }
 
-// Run() runs the Runners Run method, passing in Env.
-// It's simly a convenience function.
+// Run runs the Runners Run method, passing in Env.
+// It's simply a convenience function.
 func (cli CLI) Run() {
 	if !cli.initialized {
 		cli.Cmd.Init(&cli.Env)
