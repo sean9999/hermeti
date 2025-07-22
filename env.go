@@ -21,7 +21,7 @@ type Env struct {
 	queue      []byte
 	OutStream  io.Writer
 	ErrStream  io.Writer
-	Filesystem afero.Fs
+	Filesystem afero.IOFS
 	Randomness io.Reader
 	Args       []string
 	Vars       map[string]string
@@ -52,7 +52,7 @@ func RealEnv() Env {
 		InStream:   os.Stdin,
 		OutStream:  os.Stdout,
 		ErrStream:  os.Stderr,
-		Filesystem: afero.NewOsFs(),
+		Filesystem: afero.NewIOFS(afero.NewOsFs()),
 		Randomness: rand.Reader,
 		Args:       os.Args,
 		Vars:       stringsToMap(os.Environ()),
@@ -67,7 +67,7 @@ func TestEnv() Env {
 		InStream:   new(bytes.Buffer),
 		OutStream:  new(bytes.Buffer),
 		ErrStream:  new(bytes.Buffer),
-		Filesystem: afero.NewMemMapFs(),
+		Filesystem: afero.NewIOFS(afero.NewMemMapFs()),
 		Args:       []string{},
 		Vars:       map[string]string{},
 		Exit:       func(_ int) {},
@@ -75,19 +75,19 @@ func TestEnv() Env {
 	return env
 }
 
-// mount a subdirectory into an environment. Useful for testing. Probably dangerous otherwise
-func (env *Env) Mount(dirfs fs.ReadDirFS, at string) error {
-	if env.Filesystem == nil {
+// Mount mounts a subdirectory into an environment. Useful for testing. Probably dangerous otherwise
+func (env *Env) Mount(dirFs fs.ReadDirFS, at string) error {
+	if env.Filesystem.Fs == nil {
 		return errors.New("nil filesystem")
 	}
-	entries, err := dirfs.ReadDir(".")
+	entries, err := dirFs.ReadDir(".")
 	if err != nil {
 		return err
 	}
 
 	for _, e := range entries {
 		if !e.IsDir() {
-			srcFile, err := dirfs.Open(e.Name())
+			srcFile, err := dirFs.Open(e.Name())
 			if err != nil {
 				return err
 			}
@@ -138,11 +138,12 @@ func (env *Env) PipeInFile(fpath string) error {
 
 }
 
-func (env *Env) PipeInFiles(fpaths ...string) error {
+// PipeInFiles pipes in files to the environment's stdin (InputStream)
+func (env *Env) PipeInFiles(fPaths ...string) error {
 	var e error
 
-	for _, fpath := range fpaths {
-		err := env.PipeInFile(fpath)
+	for _, fPath := range fPaths {
+		err := env.PipeInFile(fPath)
 		if err != nil {
 			if e != nil {
 				e = fmt.Errorf("%w. %w", e, err)
