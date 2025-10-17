@@ -42,7 +42,10 @@ type CLI struct {
 // It's simply a convenience function.
 func (cli CLI) Run() {
 	if !cli.initialized {
-		cli.Cmd.Init(&cli.Env)
+		err := cli.Cmd.Init(&cli.Env)
+		if err != nil {
+			panic(err)
+		}
 		cli.initialized = true
 	}
 	cli.Cmd.Run(cli.Env)
