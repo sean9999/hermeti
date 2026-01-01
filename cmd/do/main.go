@@ -55,7 +55,7 @@ func main() {
 
 	env := hermeti.RealEnv()
 	exe := new(app)
-	cli := &hermeti.CLI{Env: env, Cmd: exe}
+	cli := &hermeti.CLI{Env: env, App: exe}
 	cli.Run()
 
 }

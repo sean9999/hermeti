@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 
+	"strings"
 	"github.com/sean9999/pear"
 )
 
@@ -32,23 +33,38 @@ type InitRunner interface {
 }
 
 // A CLI is a command line interface. It runs an app against an environment
-type CLI struct {
+type CLI[T InitRunner] struct {
 	Env         Env
-	Cmd         InitRunner
+	App         T
 	initialized bool
+}
+
+func NewCLI[T InitRunner](env *Env, app T) *CLI[T] {
+	return &CLI[T]{
+		Env: *env,
+		App: app,
+	}
+}
+
+
+//	Invoke a cli by using this string and Run ing
+func (c *CLI[T]) Invoke(str string) {
+	args := strings.Split(str, " ")
+	c.Env.Args = args
+	c.Run()
 }
 
 // Run runs the Runners Run method, passing in Env.
 // It's simply a convenience function.
-func (cli CLI) Run() {
+func (cli CLI[T]) Run() {
 	if !cli.initialized {
-		err := cli.Cmd.Init(&cli.Env)
+		err := cli.App.Init(&cli.Env)
 		if err != nil {
 			panic(err)
 		}
 		cli.initialized = true
 	}
-	cli.Cmd.Run(cli.Env)
+	cli.App.Run(cli.Env)
 }
 
 var ErrOutputNotReadable = pear.Defer("output stream is not readable")
@@ -56,7 +72,7 @@ var ErrOutputNotReadable = pear.Defer("output stream is not readable")
 // OutStream returns an io.Reader representing the stuff you put in StdOut.
 //
 //	This will not work in a real CLI because os.StdOut is not readable
-func (cli CLI) OutStream() (*bytes.Buffer, error) {
+func (cli CLI[T]) OutStream() (*bytes.Buffer, error) {
 
 	o, ok := cli.Env.OutStream.(io.Reader)
 	if !ok {
@@ -77,7 +93,7 @@ func (cli CLI) OutStream() (*bytes.Buffer, error) {
 // ErrStream returns an io.Reader representing the stuff you put in StdErr.
 //
 //	This will not work in a real CLI because os.StdOut is not readable
-func (cli CLI) ErrStream() (*bytes.Buffer, error) {
+func (cli CLI[T]) ErrStream() (*bytes.Buffer, error) {
 
 	o, ok := cli.Env.ErrStream.(io.Reader)
 	if !ok {

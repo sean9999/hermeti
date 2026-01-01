@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"bufio"
 
 	"github.com/sean9999/pear"
 	"github.com/spf13/afero"
@@ -75,12 +76,23 @@ func TestEnv() Env {
 	return env
 }
 
+// mount a real os.Dir into an abstract xfs.DirFS
+func (e *Env) MountDir(filePath string) error {
+	odir := os.DirFS(filePath)
+	dir, ok := odir.(fs.ReadDirFS)
+	if !ok {
+		return fmt.Errorf("%s is not a ReadDirFS", filePath)
+	}
+	return e.Mount(dir, ".")
+}
+
 // Mount mounts a subdirectory into an environment. Useful for testing. Probably dangerous otherwise
 func (env *Env) Mount(dirFs fs.ReadDirFS, at string) error {
 	if env.Filesystem.Fs == nil {
 		return errors.New("nil filesystem")
 	}
-	entries, err := dirFs.ReadDir(".")
+
+	entries, err := dirFs.ReadDir(at)
 	if err != nil {
 		return err
 	}
@@ -100,6 +112,28 @@ func (env *Env) Mount(dirFs fs.ReadDirFS, at string) error {
 		}
 	}
 	return nil
+}
+
+func (env *Env) Spy(ch chan string) error {
+	buf, err := env.CaptureOutput()
+	if err != nil {
+		return err
+	}
+	sc := bufio.NewScanner(buf)
+	go func() {
+		for sc.Scan() {
+			ch <- sc.Text()
+		}
+	}()
+	return nil
+}
+
+func (env *Env) CaptureOutput() (*bytes.Buffer, error) {
+	buf, ok := env.OutStream.(*bytes.Buffer)
+	if !ok {
+		return nil, errors.New("cannot capture output")
+	}
+	return buf, nil
 }
 
 // PipeIn pipes a stream into stdIn
