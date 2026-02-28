@@ -18,7 +18,6 @@ import (
  **/
 
 type exe struct {
-	hermeti.PassthroughInit
 }
 
 func (s *exe) Run(env hermeti.Env) {

@@ -1,6 +1,6 @@
 package hermeti
 
-func NewRealCli(exe InitRunner) CLI {
+func NewRealCli(exe Runner) CLI {
 	env := RealEnv()
 	return CLI{
 		Env: env,
@@ -8,7 +8,7 @@ func NewRealCli(exe InitRunner) CLI {
 	}
 }
 
-func NewTestCli(exe InitRunner) CLI {
+func NewTestCli(exe Runner) CLI {
 	env := TestEnv()
 	return CLI{
 		Env: env,

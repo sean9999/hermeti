@@ -14,10 +14,9 @@ import (
 type app struct {
 	Verbosity uint
 	DieNow    bool
-	hermeti.PassthroughInit
 }
 
-func (g *app) Run(env hermeti.Env) {
+func (g *app) Run(env *hermeti.Env) {
 
 	//	we have no use for the first argument in [os.Args]
 	args := env.Args[1:]

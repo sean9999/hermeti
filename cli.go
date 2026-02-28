@@ -10,41 +10,19 @@ import (
 // A Runner takes an [Env] and runs some code against it.
 // It cannot modify the Env.
 type Runner interface {
-	Run(Env)
-}
-
-// An Initializer initializes itself in preparation of running.
-// It can modify its [Env]
-type Initializer interface {
-	Init(*Env) error
-}
-
-// PassthroughInit is an Initializer that does nothing
-type PassthroughInit struct{}
-
-func (p PassthroughInit) Init(_ *Env) error {
-	return nil
-}
-
-type InitRunner interface {
-	Runner
-	Initializer
+	Run(*Env)
 }
 
 // A CLI is a command line interface. It runs an app against an environment
 type CLI struct {
-	Env         Env
-	Cmd         InitRunner
+	Env         *Env
+	Cmd         Runner
 	initialized bool
 }
 
 // Run runs the Runners Run method, passing in Env.
 // It's simply a convenience function.
 func (cli CLI) Run() {
-	if !cli.initialized {
-		cli.Cmd.Init(&cli.Env)
-		cli.initialized = true
-	}
 	cli.Cmd.Run(cli.Env)
 }
 

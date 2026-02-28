@@ -1,6 +1,6 @@
 module github.com/sean9999/hermeti
 
-go 1.23.2
+go 1.26.0
 
 require (
 	github.com/sean9999/pear v0.0.5
