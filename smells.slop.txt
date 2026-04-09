@@ -1,0 +1,13 @@
+  Code Smells Identified                                                                                                                               
+                                                                                                                                                       
+  1. cli.go:OutStream()/ErrStream(): Won't work in real CLI since os.Stdout/stderr aren't io.Reader. Only works for testing.                           
+  2. env.go:Mount(): Inefficient O(n) approach for copying filesystem entries.
+  3. env.go:PipeIn(): Reads all stdin into a buffer, preventing streaming with large inputs.                                                           
+  4. env.go:stringsToMap(): Overly complex parsing logic with unusual handling of len(x) > 2 cases.                                                    
+  5. fmt/main.go: Package-level stdout variable isn't thread-safe.                                                                                     
+  6. cmd/do/main.go: Uses context.Value() to share global state - unconventional pattern.                                                              
+  7. cmd/chime/main.go: AST-based symbol extraction depends on Go runtime location, fragile across versions.                                           
+  8. fmt/pkgalias.go: Exists but untracked in git - should be committed or regeneration documented.                                                    
+  9. cmd/prime/main.go: Naive prime algorithm acknowledged but unoptimized.                                                                            
+  10. env.go:PipeInFiles(): Deeply nested error chains from chained fmt.Errorf("%w. %w") calls.   
+

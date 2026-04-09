@@ -10,14 +10,13 @@ import (
 // A Runner takes an [Env] and runs some code against it.
 // It cannot modify the Env.
 type Runner interface {
-	Run(*Env)
+	Run(Env)
 }
 
 // A CLI is a command line interface. It runs an app against an environment
 type CLI struct {
-	Env         *Env
-	Cmd         Runner
-	initialized bool
+	Env Env
+	Cmd Runner
 }
 
 // Run runs the Runners Run method, passing in Env.

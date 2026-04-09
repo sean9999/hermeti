@@ -18,7 +18,6 @@ import (
 // Env is a computing environment.
 type Env struct {
 	InStream   io.Reader
-	queue      []byte
 	OutStream  io.Writer
 	ErrStream  io.Writer
 	Filesystem afero.IOFS
@@ -47,8 +46,8 @@ func stringsToMap(kvs []string) map[string]string {
 }
 
 // RealEnv creates a real Env for a CLI, using standard OS resources
-func RealEnv() *Env {
-	e := &Env{
+func RealEnv() Env {
+	e := Env{
 		InStream:   os.Stdin,
 		OutStream:  os.Stdout,
 		ErrStream:  os.Stderr,
@@ -62,8 +61,8 @@ func RealEnv() *Env {
 }
 
 // TestEnv creates an Env suitable for testing
-func TestEnv() *Env {
-	env := &Env{
+func TestEnv() Env {
+	env := Env{
 		InStream:   new(bytes.Buffer),
 		OutStream:  new(bytes.Buffer),
 		ErrStream:  new(bytes.Buffer),

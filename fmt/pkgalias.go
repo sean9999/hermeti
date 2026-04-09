@@ -8,7 +8,7 @@ import (
 	"fmt"
 )
 
-//	variables
+
 
 
 //	functions
@@ -34,23 +34,13 @@ var Fscanln = fmt.Fscanln
 var Fscanf = fmt.Fscanf
 
 
-//	interfaces
 
-type State interface {
-	fmt.State
-}
-type Formatter interface {
-	fmt.Formatter
-}
-type Stringer interface {
-	fmt.Stringer
-}
-type GoStringer interface {
-	fmt.GoStringer
-}
-type ScanState interface {
-	fmt.ScanState
-}
-type Scanner interface {
-	fmt.Scanner
-}
+
+//	interfaces
+type State = fmt.State
+type Formatter = fmt.Formatter
+type Stringer = fmt.Stringer
+type GoStringer = fmt.GoStringer
+type ScanState = fmt.ScanState
+type Scanner = fmt.Scanner
+
