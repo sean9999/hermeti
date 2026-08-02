@@ -1,6 +1,7 @@
 package hermeti
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/rand"
 	"errors"
@@ -10,16 +11,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"bufio"
 
 	"github.com/sean9999/pear"
 	"github.com/spf13/afero"
 )
 
-// Env is a computing environment.
+// An Env is a computing environment.
 type Env struct {
 	InStream   io.Reader
-	queue      []byte
 	OutStream  io.Writer
 	ErrStream  io.Writer
 	Filesystem afero.IOFS
@@ -76,7 +75,7 @@ func TestEnv() Env {
 	return env
 }
 
-// mount a real os.Dir into an abstract xfs.DirFS
+// MountDir mounts a real os.Dir into an abstract xfs.DirFS
 func (e *Env) MountDir(filePath string) error {
 	odir := os.DirFS(filePath)
 	dir, ok := odir.(fs.ReadDirFS)
@@ -87,8 +86,8 @@ func (e *Env) MountDir(filePath string) error {
 }
 
 // Mount mounts a subdirectory into an environment. Useful for testing. Probably dangerous otherwise
-func (env *Env) Mount(dirFs fs.ReadDirFS, at string) error {
-	if env.Filesystem.Fs == nil {
+func (e *Env) Mount(dirFs fs.ReadDirFS, at string) error {
+	if e.Filesystem.Fs == nil {
 		return errors.New("nil filesystem")
 	}
 
@@ -103,7 +102,7 @@ func (env *Env) Mount(dirFs fs.ReadDirFS, at string) error {
 			if err != nil {
 				return err
 			}
-			destFile, err := env.Filesystem.Create(filepath.Join(at, e.Name()))
+			destFile, err := e.Filesystem.Create(filepath.Join(at, e.Name()))
 			if err != nil {
 				return err
 			}
@@ -114,8 +113,8 @@ func (env *Env) Mount(dirFs fs.ReadDirFS, at string) error {
 	return nil
 }
 
-func (env *Env) Spy(ch chan string) error {
-	buf, err := env.CaptureOutput()
+func (e *Env) Spy(ch chan string) error {
+	buf, err := e.CaptureOutput()
 	if err != nil {
 		return err
 	}
@@ -128,8 +127,8 @@ func (env *Env) Spy(ch chan string) error {
 	return nil
 }
 
-func (env *Env) CaptureOutput() (*bytes.Buffer, error) {
-	buf, ok := env.OutStream.(*bytes.Buffer)
+func (e *Env) CaptureOutput() (*bytes.Buffer, error) {
+	buf, ok := e.OutStream.(*bytes.Buffer)
 	if !ok {
 		return nil, errors.New("cannot capture output")
 	}
@@ -137,15 +136,15 @@ func (env *Env) CaptureOutput() (*bytes.Buffer, error) {
 }
 
 // PipeIn pipes a stream into stdIn
-func (env *Env) PipeIn(r io.Reader) error {
+func (e *Env) PipeIn(r io.Reader) error {
 
 	if r == nil {
 		return pear.New("nil reader")
 	}
 
 	buf := new(bytes.Buffer)
-	if env.InStream != nil {
-		existingBytes, err := io.ReadAll(env.InStream)
+	if e.InStream != nil {
+		existingBytes, err := io.ReadAll(e.InStream)
 		if err != nil {
 			return err
 		}
@@ -157,34 +156,26 @@ func (env *Env) PipeIn(r io.Reader) error {
 	}
 
 	buf.Write(newBytes)
-	env.InStream = buf
+	e.InStream = buf
 	return nil
 
 }
 
-func (env *Env) PipeInFile(fpath string) error {
-
-	fd, err := env.Filesystem.Open(fpath)
+func (e *Env) PipeInFile(file string) error {
+	fd, err := e.Filesystem.Open(file)
 	if err != nil {
 		return fmt.Errorf("could not pipe in file. %w", err)
 	}
-	return env.PipeIn(fd)
-
+	return e.PipeIn(fd)
 }
 
 // PipeInFiles pipes in files to the environment's stdin (InputStream)
-func (env *Env) PipeInFiles(fPaths ...string) error {
-	var e error
-
+func (e *Env) PipeInFiles(fPaths ...string) error {
 	for _, fPath := range fPaths {
-		err := env.PipeInFile(fPath)
+		err := e.PipeInFile(fPath)
 		if err != nil {
-			if e != nil {
-				e = fmt.Errorf("%w. %w", e, err)
-			} else {
-				e = err
-			}
+			return err
 		}
 	}
-	return e
+	return nil
 }

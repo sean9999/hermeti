@@ -17,9 +17,7 @@ import (
  *	ex: fmt.SetOutput(cli.Env.OutStream)
  **/
 
-type exe struct {
-	hermeti.PassthroughInit
-}
+type exe struct{}
 
 func (s *exe) Run(env hermeti.Env) {
 	fmtRoot := fmt.Sprintf("%s/src/fmt", runtime.GOROOT())
@@ -27,10 +25,6 @@ func (s *exe) Run(env hermeti.Env) {
 	for _, symbol := range symbols {
 		fmt.Printf("var %s = fmt.%s\n", symbol, symbol)
 	}
-}
-
-func (s *exe) State() *exe {
-	return s
 }
 
 func main() {

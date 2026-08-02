@@ -15,20 +15,19 @@ import (
  * A CLI that gives itself w (wait time) to compute the nth prime, using the least efficient and most naive algorithm possible
  **/
 
-type exe struct {
+type Exe struct {
 	primes []int
 	n      int
 	w      time.Duration
 	sync.RWMutex
-	hermeti.PassthroughInit
 }
 
-func NewExe() *exe {
+func NewExe() *Exe {
 	//	keep a list of primes
 	primes := make([]int, 2, 1024)
 	primes[0] = 1
 	primes[1] = 2
-	return &exe{
+	return &Exe{
 		primes: primes,
 	}
 }
@@ -38,7 +37,7 @@ type result struct {
 	took  time.Duration
 }
 
-func calculatePrime(res chan result, exe *exe, start time.Time) {
+func calculatePrime(res chan result, exe *Exe, start time.Time) {
 
 	n := exe.n
 
@@ -71,7 +70,7 @@ outer:
 
 }
 
-func parseArgs(exe *exe, args []string) error {
+func parseArgs(exe *Exe, args []string) error {
 
 	f := flag.NewFlagSet("flags", flag.PanicOnError)
 	n := f.Int("n", 1, "the nth prime you want to calculate")
@@ -90,7 +89,7 @@ func parseArgs(exe *exe, args []string) error {
 
 }
 
-func (exe *exe) Run(env hermeti.Env) {
+func (exe *Exe) Run(env hermeti.Env) {
 	ctx := context.WithValue(context.Background(), "start", time.Now())
 	args := env.Args[1:]
 	err := parseArgs(exe, args)
@@ -116,7 +115,7 @@ func (exe *exe) Run(env hermeti.Env) {
 
 }
 
-func (exe *exe) State() *exe {
+func (exe *Exe) State() *Exe {
 	return exe
 }
 

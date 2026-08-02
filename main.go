@@ -1,6 +1,6 @@
 package hermeti
 
-func NewRealCli[T InitRunner](exe T) CLI[T] {
+func NewRealCli[T Runner](exe T) CLI[T] {
 	env := RealEnv()
 	return CLI[T]{
 		Env: env,
@@ -8,7 +8,7 @@ func NewRealCli[T InitRunner](exe T) CLI[T] {
 	}
 }
 
-func NewTestCli[T InitRunner](exe T, binaryName string) CLI[T] {
+func NewTestCli[T Runner](exe T, binaryName string) CLI[T] {
 	env := TestEnv()
 	env.Args = []string{binaryName}
 	return CLI[T]{
