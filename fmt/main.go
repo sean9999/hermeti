@@ -23,4 +23,4 @@ func Errorf(format string, a ...any) error {
 	return fmt.Errorf(format, a...)
 }
 
-//go:generate pkgalias fmt .
+//go:generate go tool pkgalias fmt .

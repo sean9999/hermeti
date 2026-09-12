@@ -1,18 +1,18 @@
 package hermeti
 
-func NewRealCli[T InitRunner](exe T) CLI[T] {
-	env := RealEnv()
+func NewRealCli[T Runner](exe T) CLI[T] {
+	env := RealEnv(".")
 	return CLI[T]{
-		Env: env,
+		Env: &env,
 		App: exe,
 	}
 }
 
-func NewTestCli[T InitRunner](exe T, binaryName string) CLI[T] {
+func NewTestCli[T Runner](exe T, binaryName string) CLI[T] {
 	env := TestEnv()
 	env.Args = []string{binaryName}
 	return CLI[T]{
-		Env: env,
+		Env: &env,
 		App: exe,
 	}
 }

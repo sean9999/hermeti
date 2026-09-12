@@ -1,6 +1,7 @@
 package hermeti
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/rand"
 	"errors"
@@ -8,25 +9,32 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"path/filepath"
 	"strings"
-	"bufio"
+	"testing/fstest"
 
 	"github.com/sean9999/pear"
-	"github.com/spf13/afero"
 )
+
+type Filesystem interface {
+	fs.StatFS
+	fs.ReadDirFS
+	fs.ReadFileFS
+	fs.ReadLinkFS
+}
 
 // Env is a computing environment.
 type Env struct {
-	InStream   io.Reader
-	queue      []byte
-	OutStream  io.Writer
-	ErrStream  io.Writer
-	Filesystem afero.IOFS
-	Randomness io.Reader
-	Args       []string
-	Vars       map[string]string
-	Exit       func(int)
+	InStream    io.Reader
+	queue       []byte
+	OutStream   io.Writer
+	ErrStream   io.Writer
+	Filesystem  Filesystem
+	Randomness  io.Reader
+	Args        []string
+	Vars        map[string]string
+	Exit        func(int)
+	Chdir       func(string) error
+	UserHomeDir func() (string, error)
 }
 
 // take strings of the form "foo=bar" and return a map
@@ -48,16 +56,24 @@ func stringsToMap(kvs []string) map[string]string {
 }
 
 // RealEnv creates a real Env for a CLI, using standard OS resources
-func RealEnv() Env {
+func RealEnv(rootDir string) Env {
+
+	root, err := os.OpenRoot(rootDir)
+	if err != nil {
+		panic(err)
+	}
+
 	e := Env{
-		InStream:   os.Stdin,
-		OutStream:  os.Stdout,
-		ErrStream:  os.Stderr,
-		Filesystem: afero.NewIOFS(afero.NewOsFs()),
-		Randomness: rand.Reader,
-		Args:       os.Args,
-		Vars:       stringsToMap(os.Environ()),
-		Exit:       os.Exit,
+		InStream:    os.Stdin,
+		OutStream:   os.Stdout,
+		ErrStream:   os.Stderr,
+		Filesystem:  root.FS().(Filesystem),
+		Randomness:  rand.Reader,
+		Args:        os.Args,
+		Vars:        stringsToMap(os.Environ()),
+		Exit:        os.Exit,
+		Chdir:       os.Chdir,
+		UserHomeDir: os.UserHomeDir,
 	}
 	return e
 }
@@ -68,50 +84,12 @@ func TestEnv() Env {
 		InStream:   new(bytes.Buffer),
 		OutStream:  new(bytes.Buffer),
 		ErrStream:  new(bytes.Buffer),
-		Filesystem: afero.NewIOFS(afero.NewMemMapFs()),
+		Filesystem: make(fstest.MapFS),
 		Args:       []string{},
 		Vars:       map[string]string{},
 		Exit:       func(_ int) {},
 	}
 	return env
-}
-
-// mount a real os.Dir into an abstract xfs.DirFS
-func (e *Env) MountDir(filePath string) error {
-	odir := os.DirFS(filePath)
-	dir, ok := odir.(fs.ReadDirFS)
-	if !ok {
-		return fmt.Errorf("%s is not a ReadDirFS", filePath)
-	}
-	return e.Mount(dir, ".")
-}
-
-// Mount mounts a subdirectory into an environment. Useful for testing. Probably dangerous otherwise
-func (env *Env) Mount(dirFs fs.ReadDirFS, at string) error {
-	if env.Filesystem.Fs == nil {
-		return errors.New("nil filesystem")
-	}
-
-	entries, err := dirFs.ReadDir(at)
-	if err != nil {
-		return err
-	}
-
-	for _, e := range entries {
-		if !e.IsDir() {
-			srcFile, err := dirFs.Open(e.Name())
-			if err != nil {
-				return err
-			}
-			destFile, err := env.Filesystem.Create(filepath.Join(at, e.Name()))
-			if err != nil {
-				return err
-			}
-			io.Copy(destFile, srcFile)
-			srcFile.Close()
-		}
-	}
-	return nil
 }
 
 func (env *Env) Spy(ch chan string) error {
@@ -138,11 +116,9 @@ func (env *Env) CaptureOutput() (*bytes.Buffer, error) {
 
 // PipeIn pipes a stream into stdIn
 func (env *Env) PipeIn(r io.Reader) error {
-
 	if r == nil {
 		return pear.New("nil reader")
 	}
-
 	buf := new(bytes.Buffer)
 	if env.InStream != nil {
 		existingBytes, err := io.ReadAll(env.InStream)
@@ -155,32 +131,27 @@ func (env *Env) PipeIn(r io.Reader) error {
 	if err != nil {
 		return err
 	}
-
 	buf.Write(newBytes)
 	env.InStream = buf
 	return nil
-
 }
 
 func (env *Env) PipeInFile(fpath string) error {
-
 	fd, err := env.Filesystem.Open(fpath)
 	if err != nil {
 		return fmt.Errorf("could not pipe in file. %w", err)
 	}
 	return env.PipeIn(fd)
-
 }
 
 // PipeInFiles pipes in files to the environment's stdin (InputStream)
 func (env *Env) PipeInFiles(fPaths ...string) error {
 	var e error
-
 	for _, fPath := range fPaths {
 		err := env.PipeInFile(fPath)
 		if err != nil {
-			if e != nil {
-				e = fmt.Errorf("%w. %w", e, err)
+			if env != nil {
+				e = fmt.Errorf("%w. %w", env, err)
 			} else {
 				e = err
 			}
