@@ -1,3 +1,5 @@
 go.work
 go.work.sum
 *.code-workspace
+.vscode/
+.idea/

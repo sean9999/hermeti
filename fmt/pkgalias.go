@@ -12,20 +12,17 @@ import (
 
 
 //	functions
+var Errorf = fmt.Errorf
 var FormatString = fmt.FormatString
 var Fprintf = fmt.Fprintf
 var Sprintf = fmt.Sprintf
 var Appendf = fmt.Appendf
 var Fprint = fmt.Fprint
-var Print = fmt.Print
 var Sprint = fmt.Sprint
 var Append = fmt.Append
 var Fprintln = fmt.Fprintln
 var Sprintln = fmt.Sprintln
 var Appendln = fmt.Appendln
-var Scan = fmt.Scan
-var Scanln = fmt.Scanln
-var Scanf = fmt.Scanf
 var Sscan = fmt.Sscan
 var Sscanln = fmt.Sscanln
 var Sscanf = fmt.Sscanf
@@ -35,3 +32,9 @@ var Fscanf = fmt.Fscanf
 
 
 //	interfaces
+type State = fmt.State
+type Formatter = fmt.Formatter
+type Stringer = fmt.Stringer
+type GoStringer = fmt.GoStringer
+type ScanState = fmt.ScanState
+type Scanner = fmt.Scanner

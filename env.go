@@ -9,7 +9,6 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"strings"
 	"testing/fstest"
 
 	"github.com/sean9999/pear"
@@ -37,25 +36,9 @@ type Env struct {
 	UserHomeDir func() (string, error)
 }
 
-// take strings of the form "foo=bar" and return a map
-func stringsToMap(kvs []string) map[string]string {
-	m := make(map[string]string, len(kvs))
-	for _, kv := range kvs {
-		x := strings.Split(kv, "=")
-		if len(x) == 2 {
-			m[x[0]] = x[1]
-		}
-		if len(x) == 1 {
-			m[kv] = ""
-		}
-		if len(x) > 2 {
-			m[x[0]] = strings.Join(x[1:], "=")
-		}
-	}
-	return m
-}
-
-// RealEnv creates a real Env for a CLI, using standard OS resources
+// RealEnv creates a real Env for a CLI, suitable for main().
+// The rootDir you pass in is used as an [os.Root].
+// RealEnv("/") will give you the classic insecure behaviour.
 func RealEnv(rootDir string) Env {
 
 	root, err := os.OpenRoot(rootDir)
@@ -78,7 +61,7 @@ func RealEnv(rootDir string) Env {
 	return e
 }
 
-// TestEnv creates an Env suitable for testing
+// TestEnv creates an Env suitable for testing.
 func TestEnv() Env {
 	env := Env{
 		InStream:   new(bytes.Buffer),
@@ -114,7 +97,7 @@ func (env *Env) CaptureOutput() (*bytes.Buffer, error) {
 	return buf, nil
 }
 
-// PipeIn pipes a stream into stdIn
+// PipeIn pipes a stream into InStream (ex: os.StdIn)
 func (env *Env) PipeIn(r io.Reader) error {
 	if r == nil {
 		return pear.New("nil reader")
@@ -136,8 +119,8 @@ func (env *Env) PipeIn(r io.Reader) error {
 	return nil
 }
 
-func (env *Env) PipeInFile(fpath string) error {
-	fd, err := env.Filesystem.Open(fpath)
+func (env *Env) PipeInFile(filePath string) error {
+	fd, err := env.Filesystem.Open(filePath)
 	if err != nil {
 		return fmt.Errorf("could not pipe in file. %w", err)
 	}
@@ -145,10 +128,10 @@ func (env *Env) PipeInFile(fpath string) error {
 }
 
 // PipeInFiles pipes in files to the environment's stdin (InputStream)
-func (env *Env) PipeInFiles(fPaths ...string) error {
+func (env *Env) PipeInFiles(filePaths ...string) error {
 	var e error
-	for _, fPath := range fPaths {
-		err := env.PipeInFile(fPath)
+	for _, filePath := range filePaths {
+		err := env.PipeInFile(filePath)
 		if err != nil {
 			if env != nil {
 				e = fmt.Errorf("%w. %w", env, err)
