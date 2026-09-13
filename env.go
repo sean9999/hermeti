@@ -10,9 +10,9 @@ import (
 	"io/fs"
 	"os"
 	"testing/fstest"
-
-	"github.com/sean9999/pear"
 )
+
+var ErrHermeti = errors.New("hermeti")
 
 type Filesystem interface {
 	fs.StatFS
@@ -78,7 +78,7 @@ func TestEnv() Env {
 func (env *Env) Spy(ch chan string) error {
 	buf, err := env.CaptureOutput()
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: can't spy: %w", ErrHermeti, err)
 	}
 	sc := bufio.NewScanner(buf)
 	go func() {
@@ -92,7 +92,7 @@ func (env *Env) Spy(ch chan string) error {
 func (env *Env) CaptureOutput() (*bytes.Buffer, error) {
 	buf, ok := env.OutStream.(*bytes.Buffer)
 	if !ok {
-		return nil, errors.New("cannot capture output")
+		return nil, fmt.Errorf("%w: cannot capture output", ErrHermeti)
 	}
 	return buf, nil
 }
@@ -100,7 +100,7 @@ func (env *Env) CaptureOutput() (*bytes.Buffer, error) {
 // PipeIn pipes a stream into InStream (ex: os.StdIn)
 func (env *Env) PipeIn(r io.Reader) error {
 	if r == nil {
-		return pear.New("nil reader")
+		return fmt.Errorf("%w: nil reader", ErrHermeti)
 	}
 	buf := new(bytes.Buffer)
 	if env.InStream != nil {
@@ -122,7 +122,7 @@ func (env *Env) PipeIn(r io.Reader) error {
 func (env *Env) PipeInFile(filePath string) error {
 	fd, err := env.Filesystem.Open(filePath)
 	if err != nil {
-		return fmt.Errorf("could not pipe in file. %w", err)
+		return fmt.Errorf("%w: could not pipe in file. %w", ErrHermeti, err)
 	}
 	return env.PipeIn(fd)
 }
@@ -134,7 +134,7 @@ func (env *Env) PipeInFiles(filePaths ...string) error {
 		err := env.PipeInFile(filePath)
 		if err != nil {
 			if env != nil {
-				e = fmt.Errorf("%w. %w", env, err)
+				e = fmt.Errorf("%w. %w", e, err)
 			} else {
 				e = err
 			}
